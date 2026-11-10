@@ -8,6 +8,8 @@
 #include "Image_ConverterDlg.h"
 #include "afxdialogex.h"
 #include <vector>
+#include <dwmapi.h>
+#pragma comment(lib, "dwmapi.lib")
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -66,6 +68,8 @@ void CImageConverterDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BTNCONVERTALL, m_BtnConvertAll);
 	DDX_Control(pDX, IDC_FILELIST, m_FileList);
 	DDX_Control(pDX, IDC_CB_EXTENSION, m_CbExtension);
+	DDX_Control(pDX, IDC_ST_EXTENSION, m_StExtension);
+
 }
 
 BEGIN_MESSAGE_MAP(CImageConverterDlg, CDialogEx)
@@ -75,6 +79,7 @@ BEGIN_MESSAGE_MAP(CImageConverterDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTNOPEN, &CImageConverterDlg::OnBnClickedBtnopen)
 	ON_BN_CLICKED(IDC_BTNDELETE, &CImageConverterDlg::OnBnClickedBtndelete)
 	ON_BN_CLICKED(IDC_BTNCONVERTALL, &CImageConverterDlg::OnBnClickedBtnconvertall)
+	ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 
@@ -106,8 +111,8 @@ BOOL CImageConverterDlg::OnInitDialog()
 
 	// 이 대화 상자의 아이콘을 설정합니다.  응용 프로그램의 주 창이 대화 상자가 아닐 경우에는
 	//  프레임워크가 이 작업을 자동으로 수행합니다.
-	//SetIcon(m_hIcon, TRUE);			// 큰 아이콘을 설정합니다.
-	//SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
+	SetIcon(m_hIcon, TRUE);			// 큰 아이콘을 설정합니다.
+	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
 	// 다이얼로그 크기 설정
 	MoveWindow(100, 100, 1000, 800);
@@ -123,6 +128,25 @@ BOOL CImageConverterDlg::OnInitDialog()
 		SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED
 	);
 
+	COLORREF titleColor = RGB(100, 140, 180);
+	COLORREF textColor = RGB(245, 255, 255);
+
+	DwmSetWindowAttribute(
+		GetSafeHwnd(),
+		DWMWA_CAPTION_COLOR,
+		&titleColor,
+		sizeof(titleColor)
+	);
+
+	DwmSetWindowAttribute(
+		GetSafeHwnd(),
+		DWMWA_TEXT_COLOR,
+		&textColor,
+		sizeof(textColor)
+	);
+
+	m_BgBrush.CreateSolidBrush(RGB(250, 250, 250));
+
 	// 타이틀
 	SetWindowTextW(L"멀티 이미지 컨버터");
 
@@ -130,7 +154,7 @@ BOOL CImageConverterDlg::OnInitDialog()
 	const int btnHeight = 70;
 	const int gap = 40;
 	const int startX = 30;
-	const int startY = 20;
+	const int startY = 35;
 
 	// 버튼
 	m_BtnOpenfolder.MoveWindow(
@@ -142,6 +166,9 @@ BOOL CImageConverterDlg::OnInitDialog()
 	m_CbExtension.MoveWindow(
 		startX + 3 * (btnWidth + gap)-15, startY, btnWidth, btnHeight);
 
+	m_StExtension.MoveWindow(
+		startX + 3 * (btnWidth + gap)-68, startY + 5, btnWidth, btnHeight);
+
 	m_BtnConvertAll.MoveWindow(
 		startX + 3 * (btnWidth + gap) -15, startY + 600, btnWidth, btnHeight);
 
@@ -150,10 +177,12 @@ BOOL CImageConverterDlg::OnInitDialog()
 	m_BtnOpenfolder.SetFont(&m_Font);
 	m_BtnDelete.SetFont(&m_Font);
 	m_BtnConvertAll.SetFont(&m_Font);
+	m_StExtension.SetFont(&m_Font);
 
 	m_BtnOpenfolder.SetWindowText(_T("파일 선택"));
 	m_BtnDelete.SetWindowText(_T("삭제"));
 	m_BtnConvertAll.SetWindowText(_T("이미지 변환"));
+	m_StExtension.SetWindowText(_T("형식:"));
 
 	// 리스트 컨트롤
 	const int listWidth = 900;
@@ -172,7 +201,7 @@ BOOL CImageConverterDlg::OnInitDialog()
 
 	// 컬럼 추가
 	m_FileList.InsertColumn(0, _T("  파일명"), LVCFMT_LEFT, 200);
-	m_FileList.InsertColumn(1, _T("경로"), LVCFMT_LEFT, 600);
+	m_FileList.InsertColumn(1, _T("경로"), LVCFMT_LEFT, 700);
 
 	//(0: jpg, 1 : jpeg, 2 : png, 3 : bmp, 4 : gif);
 	std::vector<CString> vecExtension = {L"jpg", L"jpeg", L"png", L"bmp" , L"gif"};
@@ -183,6 +212,7 @@ BOOL CImageConverterDlg::OnInitDialog()
 	m_CbExtension.SetCurSel(0);
 
 	ConvertImageFile m_CvrtImg;
+	SelecPathDlg m_PathDlg;
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
 
@@ -249,19 +279,25 @@ void CImageConverterDlg::OnBnClickedBtnopen()
 		_T("*.BMP;*.GIF;*.JPG;*.JPEG;*.PNG;*.bmp;*.gif;*.jpg;*.jpeg;*.png|")
 		_T("모든 파일 (*.*)|*.*||");
 
-	CFileDialog dlg(TRUE, _T("*.jpg"), _T("image"), OFN_HIDEREADONLY, szFilter);
+	CFileDialog dlg(TRUE, _T("*.jpg"), _T("image"), OFN_ALLOWMULTISELECT | OFN_HIDEREADONLY, szFilter);
+	// 다중 선택 시 리스트에 파일 목록 추가
 
 	if (IDOK == dlg.DoModal())
 
 	{
-		CString pathName = dlg.GetPathName();
-		CString fileName = dlg.GetFileName();
-
-		if (!isDuplicatedFile(pathName))
+		for (POSITION pos = dlg.GetStartPosition(); pos != NULL;)
 		{
-			int nIndex = m_FileList.InsertItem(m_FileList.GetItemCount(), fileName);
-			m_FileList.SetItemText(nIndex, 1, pathName);
-			m_FileList.SetCheck(nIndex, TRUE);
+			CString pathName = dlg.GetNextPathName(pos);
+
+			int nPos = pathName.ReverseFind(_T('\\'));
+			CString fileName = pathName.Mid(nPos + 1);
+
+			if (!isDuplicatedFile(pathName))
+			{
+				int nIndex = m_FileList.InsertItem(m_FileList.GetItemCount(), fileName);
+				m_FileList.SetItemText(nIndex, 1, pathName);
+				m_FileList.SetCheck(nIndex, TRUE);
+			}
 		}
 	}
 }
@@ -283,79 +319,100 @@ void CImageConverterDlg::OnBnClickedBtndelete()
 void CImageConverterDlg::OnBnClickedBtnconvertall()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	bool blsuccess = true;
-	for (int i = m_FileList.GetItemCount() - 1; i >= 0; i--)
+	// 경로 선택 다이얼로그
+	CString strPath;
+	if (m_FileList.GetItemCount() == 0)
 	{
-		if (m_FileList.GetCheck(i))
+		return;
+	}
+	if (m_PathDlg.DoModal() == IDOK)
+	{
+		strPath = m_PathDlg.m_selectedPath;
+		bool blsuccess = true;
+		for (int i = m_FileList.GetItemCount() - 1; i >= 0; i--)
 		{
-
-			CString strFileName = m_FileList.GetItemText(i, 0);
-			CString strFilePath = m_FileList.GetItemText(i, 1);
-
-			Gdiplus::Image image(strFilePath);
-
-			if (image.GetLastStatus() != Gdiplus::Ok)
+			if (m_FileList.GetCheck(i))
 			{
-				AfxMessageBox(_T("이미지를 불러올 수 없습니다."));
-				return;
-			}
 
-			CRect imageRect(
-				0,
-				0,
-				image.GetWidth(),
-				image.GetHeight()
-			);
+				CString strFileName = m_FileList.GetItemText(i, 0);
+				CString strFilePath = m_FileList.GetItemText(i, 1);
 
-			int intComboidx = m_CbExtension.GetCurSel();
-			CString strExtension;
-			if (intComboidx == 0)
-			{
-				strExtension = ".jpg";
-			}
-			if (intComboidx == 1)
-			{
-				strExtension = ".jpeg";
-			}
-			if (intComboidx == 2)
-			{
-				strExtension = ".png";
-			}
-			if (intComboidx == 3)
-			{
-				strExtension = ".bmp";
-			}
-			if (intComboidx == 4)
-			{
-				strExtension = ".gif";
-			}
+				Gdiplus::Image image(strFilePath);
 
-			// 마지막 '\' 위치 찾기
-			int nPos = strFilePath.ReverseFind(_T('\\'));
+				if (image.GetLastStatus() != Gdiplus::Ok)
+				{
+					AfxMessageBox(_T("이미지를 불러올 수 없습니다."));
+					return;
+				}
 
-			// 디렉터리 경로 추출
-			CString strDirectory = strFilePath.Left(nPos + 1);
+				CRect imageRect(
+					0,
+					0,
+					image.GetWidth(),
+					image.GetHeight()
+				);
 
-			// 새 파일명 생성
-			CString strTargetName = ExtractfileName(strFileName) + strExtension;
+				int intComboidx = m_CbExtension.GetCurSel();
+				CString strExtension;
+				if (intComboidx == 0)
+				{
+					strExtension = ".jpg";
+				}
+				if (intComboidx == 1)
+				{
+					strExtension = ".jpeg";
+				}
+				if (intComboidx == 2)
+				{
+					strExtension = ".png";
+				}
+				if (intComboidx == 3)
+				{
+					strExtension = ".bmp";
+				}
+				if (intComboidx == 4)
+				{
+					strExtension = ".gif";
+				}
 
-			// 디렉터리 + 새 파일명
-			CString strTargetPath = strDirectory + strTargetName;
+				// 마지막 '\' 위치 찾기
+				int nPos = strFilePath.ReverseFind(_T('\\'));
 
-			if (!m_CvrtImg.ConvertImagExtension(strFilePath, strTargetPath, imageRect, intComboidx))
-			{
-				blsuccess = false;
+				// 디렉터리 경로 추출
+				CString strDirectory = strFilePath.Left(nPos + 1);
+
+				// 새 파일명 생성
+				CString strTargetName = ExtractfileName(strFileName) + strExtension;
+				CString strTargetPath;
+
+				// 디폴트: 디렉터리 + 새 파일명
+				if (strPath == "default")
+				{
+					strTargetPath = strDirectory + strTargetName;
+
+				}
+				// 폴더 선택한 경우
+				else
+				{
+					strPath += "//";
+					strTargetPath = strPath + strTargetName;
+				}
+
+				if (!m_CvrtImg.ConvertImagExtension(strFilePath, strTargetPath, imageRect, intComboidx))
+				{
+					blsuccess = false;
+				}
 			}
 		}
-	}
-	if (blsuccess)
-	{
-		OnBnClickedBtndelete();
-		AfxMessageBox(_T("이미지 변환 성공!"), MB_OK | MB_ICONINFORMATION);
-	}
-	else
-	{
-		AfxMessageBox(_T("변환 실패"), MB_OK | MB_ICONERROR);
+		if (blsuccess)
+		{
+			OnBnClickedBtndelete();
+			AfxMessageBox(_T("이미지 변환 성공!"), MB_OK | MB_ICONINFORMATION);
+		}
+		else
+		{
+			AfxMessageBox(_T("변환 실패"), MB_OK | MB_ICONERROR);
+		}
 	}
 }
 
@@ -392,4 +449,33 @@ CString CImageConverterDlg::ExtractfileName(CString str)
 	}
 
 	return res;
+}
+
+HBRUSH CImageConverterDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	// TODO:  여기서 DC의 특성을 변경합니다.
+
+	// TODO:  기본값이 적당하지 않으면 다른 브러시를 반환합니다.
+	switch (nCtlColor) {
+
+	case CTLCOLOR_DLG:   /// 다이얼로그 배경색을 white로.
+	{
+		return (HBRUSH)m_BgBrush.GetSafeHandle();
+	}
+	case CTLCOLOR_BTN:    // 버튼의 배경색을 투명으로...
+	{
+		//return CreateSolidBrush(RGB(100, 150, 170));
+	}
+
+	case CTLCOLOR_STATIC:
+
+	{
+		pDC->SetTextColor(RGB(0, 0, 0));  // static text 글자색 변경
+		pDC->SetBkMode(TRANSPARENT);   // static text 배경색 투명
+		return (HBRUSH)::GetStockObject(NULL_BRUSH);
+	}
+	}
+	return hbr;
 }

@@ -7,19 +7,27 @@
 #define IDS_ABOUTBOX                    101
 #define IDD_IMAGE_CONVERTER_DIALOG      102
 #define IDR_MAINFRAME                   128
+#define IDI_ICON1                       130
+#define IDI_IMGCVRT_ICON                130
+#define IDD_CVRT_DLG                    131
 #define IDC_BTNOPEN                     1000
 #define IDC_BTNDELETE                   1001
 #define IDC_BTNCONVERTALL               1002
 #define IDC_FILELIST                    1003
 #define IDC_CB_EXTENSION                1004
+#define IDC_ST_EXTENSION                1005
+#define IDC_RADIO_DEFAULT               1006
+#define IDC_RADIO_SLFOLDER              1007
+#define IDC_BUTTON_ok                   1008
+#define IDC_ST_SELECT                   1009
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        130
+#define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1005
+#define _APS_NEXT_CONTROL_VALUE         1010
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

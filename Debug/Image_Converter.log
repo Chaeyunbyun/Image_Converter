@@ -2,7 +2,8 @@
   ConvertImageFile.cpp
   Image_Converter.cpp
   Image_ConverterDlg.cpp
-C:\Users\chaey\0.Study\0.PracticeProject\Image_Converter\Image_Converter\Image_ConverterDlg.cpp(179,20): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\chaey\0.Study\0.PracticeProject\Image_Converter\Image_Converter\Image_ConverterDlg.cpp(208,20): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+  SelecPathDlg.cpp
   코드를 생성하고 있습니다...
   Image_Converter.vcxproj -> C:\Users\chaey\0.Study\0.PracticeProject\Image_Converter\Image_Converter\Debug\Image_Converter.exe
   'pwsh.exe'은(는) 내부 또는 외부 명령, 실행할 수 있는 프로그램, 또는

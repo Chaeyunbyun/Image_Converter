@@ -2,6 +2,7 @@
 // Image_ConverterDlg.h: 헤더 파일
 //
 #include "ConvertImageFile.h"
+#include "SelecPathDlg.h"
 #pragma once
 
 
@@ -30,17 +31,23 @@ protected:
 	CButton m_BtnDelete;
 	CButton m_BtnConvertAll;
 
+	// 텍스트
+	CStatic m_StExtension;
+
 	// 리스트 컨트롤
 	CListCtrl m_FileList;
 
 	// 콤보 박스
 	CComboBox m_CbExtension;
 
+	// 폰트/ 브러시
 	CFont m_Font;
+	CBrush m_BgBrush;
 
 	bool isDuplicatedFile(CString Filename);
 	CString ExtractfileName(CString str);
 	ConvertImageFile m_CvrtImg;
+	SelecPathDlg m_PathDlg;
 
 	// 생성된 메시지 맵 함수
 	virtual BOOL OnInitDialog();
@@ -52,4 +59,5 @@ public:
 	afx_msg void OnBnClickedBtnopen();
 	afx_msg void OnBnClickedBtndelete();
 	afx_msg void OnBnClickedBtnconvertall();
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 };
