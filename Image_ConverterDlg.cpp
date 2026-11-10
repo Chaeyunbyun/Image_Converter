@@ -460,11 +460,11 @@ HBRUSH CImageConverterDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 	// TODO:  기본값이 적당하지 않으면 다른 브러시를 반환합니다.
 	switch (nCtlColor) {
 
-	case CTLCOLOR_DLG:   /// 다이얼로그 배경색을 white로.
+	case CTLCOLOR_DLG:   
 	{
 		return (HBRUSH)m_BgBrush.GetSafeHandle();
 	}
-	case CTLCOLOR_BTN:    // 버튼의 배경색을 투명으로...
+	case CTLCOLOR_BTN:   
 	{
 		//return CreateSolidBrush(RGB(100, 150, 170));
 	}

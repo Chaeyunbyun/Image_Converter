@@ -95,11 +95,19 @@ BOOL SelecPathDlg::OnInitDialog()
 	style &= ~WS_THICKFRAME;
 	SetWindowLongPtr(m_hWnd, GWL_STYLE, style);
 
-	// 프레임 갱신
+	CRect rect;
+	GetParent()->GetWindowRect(&rect);
+
+	// 부모 다이얼로그와 동일한 위치로 이동
 	SetWindowPos(
-		nullptr, 0, 0, 0, 0,
-		SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED
+		NULL,
+		rect.left,
+		rect.top,
+		0,
+		0,
+		SWP_NOSIZE | SWP_NOZORDER
 	);
+
 
 	COLORREF titleColor = RGB(100, 140, 180);
 	COLORREF textColor = RGB(245, 255, 255);
